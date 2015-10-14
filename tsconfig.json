@@ -1,0 +1,13 @@
+{
+	"compilerOptions": {
+		"target": "ES5",
+		"outDir": "assets/js",
+		"emitBOM": false,
+		"charset": "UTF-8"
+	},
+	"files": [
+		"assets/ts/binpacker-index.ts",
+		"assets/ts/hector.ts",
+		"assets/ts/binpacker.ts"
+	]
+}
