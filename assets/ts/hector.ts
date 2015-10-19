@@ -31,6 +31,8 @@ class Hector {
 	flip() : Hector { return Hector.flip(this); }
 	clone() : Hector { return Hector.clone(this); }
 	
+	toString() : string { return `(${this.x}, ${this.y})`; }
+	
 	static plus(lhs : Hector, rhs : Hector | number) : Hector {
 		if (typeof rhs === 'number') {
 			return new Hector(lhs.x + rhs, lhs.y + rhs);
@@ -66,12 +68,6 @@ class Hector {
 		var acx : number = c.x - a.x;
 		var acy : number = c.y - a.y;
 		return acx * aby - abx * acy;
-		
-		/*
-		var ab : Hector = Hector.minus(b, a);
-		var ac : Hector = Hector.minus(c, a);
-		return Hector.det(ab, ac);
-		*/
 	}
 	
 }

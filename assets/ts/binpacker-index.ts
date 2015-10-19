@@ -3,9 +3,9 @@ class PackerImage {
 	
 	constructor(public cache : CachedImageData) { }
 	
-	get width() {
+	get width() : number {
 		return this.cache.data.width; }
-	get height() {
+	get height() : number {
 		return this.cache.data.height; }
 	
 	get size() : Hector {
@@ -13,8 +13,7 @@ class PackerImage {
 
 	renderOnContext(ctx : CanvasRenderingContext2D,
 		origin : Hector = new Hector(0, 0)) {
-		// ctx.putImageData(this., origin.x, origin.y);
-	}
+		ctx.drawImage(this.cache.element, origin.x, origin.y); }
 
 }
 
@@ -32,18 +31,11 @@ class PackerImageStripped extends PackerImage {
 	
 	renderOnContext(ctx : CanvasRenderingContext2D,
 			origin : Hector = new Hector(0, 0)) {
-		
-		console.log(`Top: ${this.content_origin.x}, Left: ${this.content_origin.y}, Width: ${this.content_size.x}, Height: ${this.content_size.y}`);
 		ctx.drawImage(this.cache.element,
 			this.content_origin.x, this.content_origin.y,
 			this.content_size.x, this.content_size.y,
-			0, 0,
+			origin.x, origin.y,
 			this.content_size.x, this.content_size.y);
-		// ctx.drawImage(this.cache.element,
-		// 	this.content_origin.x, this.content_origin.y,
-		// 	this.content_size.x, this.content_size.y,
-		// 	origin.x, origin.y,
-		// 	this.content_size.x, this.content_size.y);
 	}
 }
 
@@ -128,41 +120,43 @@ function cropImage(cache : CachedImageData, callback : (image : PackerImageStrip
 	callback(ret);
 }
 
-function renderImage(src) {
-	var image = new Image();
-	image.onload = function () {
-		var canvas = <HTMLCanvasElement>document.getElementById('center-canvas');
-		var ctx : CanvasRenderingContext2D = canvas.getContext("2d");
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		ctx.drawImage(image, 0, 0, image.width, image.height);
+// function renderImage(src) {
+// 	var image = new Image();
+// 	image.onload = function () {
+// 		var canvas = <HTMLCanvasElement>document.getElementById('center-canvas');
+// 		var ctx : CanvasRenderingContext2D = canvas.getContext("2d");
+// 		ctx.clearRect(0, 0, canvas.width, canvas.height);
+// 		ctx.drawImage(image, 0, 0, image.width, image.height);
 		
-		currentImage = new CachedImageData(image);
-	}
-	image.src = src;
-}
+// 		currentImage = new CachedImageData(image);
+// 	}
+// 	image.src = src;
+// }
 
-var currentImage : CachedImageData = undefined;
 
-var target = document.getElementsByTagName('body')[0];
-target.addEventListener('dragover', function (e) {
-	e.preventDefault() }, true);
-target.addEventListener('drop', function (e) {
-	e.preventDefault();
-	var img = e.dataTransfer.files[0];
-	if (!img.type.match(/image.*/)) {
-		return; }
-	var reader = new FileReader();
-	reader.onload = function (e) {
-		renderImage(e.target.result); };
-	reader.readAsDataURL(img);
-});
+// var currentImage : CachedImageData = undefined;
 
-function testCrop() {	
-	cropImage(currentImage, function (img) {
-		var canvas = <HTMLCanvasElement>document.getElementById('center-canvas')
-		canvas.width = img.content_size.x; canvas.height = img.content_size.y;
-		var ctx_t : CanvasRenderingContext2D = canvas.getContext('2d');
-		ctx_t.clearRect(0, 0, canvas.width, canvas.height);
-		img.renderOnContext(ctx_t);
-	});
-}
+// var target = document.getElementsByTagName('body')[0];
+// target.addEventListener('dragover', function (e) {
+// 	e.preventDefault() }, true);
+// target.addEventListener('drop', function (e) {
+// 	e.preventDefault();
+// 	var img = e.dataTransfer.files[0];
+// 	if (!img.type.match(/image.*/)) {
+// 		return; }
+// 	var reader = new FileReader();
+// 	reader.onload = function (e) {
+// 		renderImage(e.target.result); };
+// 	reader.readAsDataURL(img);
+// });
+
+// function testCrop() {	
+// 	cropImage(currentImage, function (img) {
+// 		var canvas = <HTMLCanvasElement>document.getElementById('center-canvas')
+// 		canvas.width = img.content_size.x; canvas.height = img.content_size.y;
+// 		var ctx_t : CanvasRenderingContext2D = canvas.getContext('2d');
+// 		ctx_t.clearRect(0, 0, canvas.width, canvas.height);
+// 		img.renderOnContext(ctx_t);
+// 	});
+// }
+
