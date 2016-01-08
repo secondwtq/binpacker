@@ -1,12 +1,16 @@
 {
 	"compilerOptions": {
-		"target": "ES5",
+		"target": "es5",
 		"outDir": "assets/js",
 		"emitBOM": false,
 		"charset": "UTF-8",
 		"jsx": "react"
 	},
+    "filesGlob": [
+        "typings/**/**.d.ts"
+    ],
 	"files": [
+        "typings/react/react-global.d.ts",
 		"typings/react/react.d.ts",
 		
 		"assets/ts/binpacker-util.ts",

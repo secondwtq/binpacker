@@ -1,10 +1,6 @@
-/// <reference path="../../typings/react/react.d.ts" />
-
-// "use strict";
+"use strict";
 
 module HowardUtility.BinPacker {
-
-import React = __React;
 
 class HPackerImageData {
 	constructor(public image : PackerImageStripped,
@@ -13,21 +9,8 @@ class HPackerImageData {
 	flipped : boolean = false;
 }
 
-class HImagesList extends React.Component<any, any> {
-	render () {
-		return (<ul>{this.props.children}</ul>);
-	}
-}
-
-class HImagesListItem extends React.Component<any, any> {
-	render () {
-		return (
-			<li>
-				{this.props.children}
-			</li>	
-		);
-	}
-}
+var HImagesList = ({ children }) => (<ul>{children}</ul>);
+var HImagesListItem = ({ children }) => (<li>{children}</li>);
 
 class HPreviewProps {
 	image : PackerImageStripped;
@@ -40,7 +23,7 @@ class HPreview extends React.Component<HPreviewProps, any> {
 	componentDidUpdate() {
 		var img = this.props.image;
 		if (img) {
-			canvasStoreAndClearCall(React.findDOMNode(this.refs['canvas']),
+			canvasStoreAndClearCall(this.refs['canvas'],
 				(ctx) => {
 					PackerImage.prototype.renderOnContext.call(img, ctx);
 					ctx.strokeRect(img.content_origin.x, img.content_origin.y,
@@ -73,7 +56,7 @@ class HPackedImage extends React.Component<HPackedImageProps, any> {
 class HPackedCanvas extends React.Component<any, any> {
 	
 	componentDidUpdate () {
-		canvasStoreAndClearCall(React.findDOMNode(this.refs['canvas']),
+		canvasStoreAndClearCall(this.refs['canvas'],
 			(ctx) => {
 				React.Children.forEach(this.props.children,
 					(child) => {
@@ -98,7 +81,7 @@ class HPackedCanvas extends React.Component<any, any> {
 	
 	render () {
 		return (
-			<div>
+			<div class="h-packed-canvas">
 				<canvas ref="canvas" width="1024" height="1024"></canvas>
 			</div>
 		);
@@ -129,6 +112,7 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
 	handleDrop(e : React.DragEvent) {
 		e.preventDefault();
 		var file = e.dataTransfer.files[0];
+        // only continue if dropped in an image
 		if (!file.type.match(/image.*/)) {
 			return; }
 		var name = file.name;
@@ -171,6 +155,7 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
 	}
 }
 
-React.render(<HPackerApp />, document.getElementById('rct-plchder'));
+ReactDOM.render(<HPackerApp />,
+    document.getElementById('rct-plchder'));
 
 }
