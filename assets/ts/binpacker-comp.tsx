@@ -3,34 +3,62 @@
 
 module HowardUtility.BinPacker {
 
-class HPackerImageData {
-	constructor(public image : PackerImageStripped,
-		public name : string) { }
-	packedrect : Rectangle;
-	flipped : boolean = false;
-}
-
 interface CollapseProps extends React.Props<any> {
     open?: boolean;
 }
 
-class Collapse extends React.Component<any, any> {
+interface CollapseState {
+    height?: string;
+    inAnimate?: boolean;
+}
+
+class Collapse extends React.Component<any, CollapseState> {
     constructor(props) {
         super(props);
+        this.state = {
+            height: '0px',
+            inAnimate: false
+        };
     }
     
-    render() {
-        const { open, children } = this.props;
+    updateHeight() {
         var height;
-        if (open) {
-            height = `${this.refs['inner'].clientHeight}px`;
+        if (!this.props.open) {
+            if (this.state.inAnimate) {
+                height = `${(this.refs['inner'] as Element).clientHeight}px`;
+                setTimeout(() => requestAnimationFrame(() => this.setState({ inAnimate: false })), 0);
+            } else { height = '0px'; }
         } else {
-            height = '0px';
+            height = this.state.inAnimate ? `${(this.refs['inner'] as Element).clientHeight}px` : 'auto';
         }
+        if (height !== this.state.height) {
+            this.setState({ height }); }
+    }
+    
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.open != this.props.open) {
+            if (this.refs['wrapper']) {
+                this.setState({ inAnimate: true });
+                var transitionEndHandler = (e) => {
+                    this.setState({ inAnimate: false });
+                    (this.refs['wrapper'] as Element).removeEventListener('transitionend', transitionEndHandler, false);
+                    e.stopPropagation();
+                }
+                (this.refs['wrapper'] as Element).addEventListener('transitionend', transitionEndHandler, false);
+            }
+        }
+    }
+    
+    componentDidUpdate(prevProps, prevState) {
+        this.updateHeight(); }
+    
+    render() {
+        console.log(`height ${this.state.height}`);
+        const { open, children } = this.props;
         return (
-            <div ref="wrapper" style={ { height } }
+            <div ref="wrapper" style={ { height: this.state.height } }
                     className={`rcoll-wrap${open ? ' rcoll-open' : ''}`}>
-                <div ref="inner" { ... this.props }>{children}</div>
+                <div ref="inner" { ... this.props }></div>
             </div>
         );
     }
@@ -129,11 +157,14 @@ class Icon extends React.Component<IconProps, any> {
 
 interface ButtonProps extends React.HTMLProps<any> {
     className?: string;
+    onToolbar?: boolean;
 }
 
 class Button extends React.Component<ButtonProps, any> {
     render () {
         var className = 'rbtn';
+        if (this.props.onToolbar) {
+            className += ' rbtn-toolbar'; }
         if (this.props.className) {
             className += ' ' + this.props.className; }
         return (<button className={className} { ... this.props }>{this.props.children}</button>);
@@ -157,7 +188,7 @@ class EditableText extends React.Component<EditableTextProps, any> {
     
     handleChange(e) {
         if (this.props.onChange) {
-            e.target = { value: this.refs['ele'].innerHTML };
+            e.target = { value: (this.refs['ele'] as HTMLElement).innerHTML };
             this.props.onChange(e);
         }
     }
@@ -184,30 +215,120 @@ class EditableText extends React.Component<EditableTextProps, any> {
     }
 }
 
-var HImagesList = ({ children }) => (<ul className="h-ul">{children}</ul>);
+class HPackerFolder {
+    constructor(public name: string) { }
+    images: HPackerImageData[] = [ ];
+    get length () { return this.images.length; }
+}
 
-interface HImagesListItemProps extends React.Props<any> {
+class HPackerImageData {
+	constructor(public image : PackerImageStripped,
+		public name : string) { }
+	packedrect : Rectangle;
+	flipped : boolean = false;
+}
+
+type HImageListItem = HImagesListFolderItem | HImagesListImageItem;
+
+interface HImagesListProps extends React.Props<any> {
+    data?: HPackerFolder[];
+}
+
+interface HImagesListState {
+    selectedItem: HImageListItem;
+}
+
+class HImagesList extends React.Component<HImagesListProps, HImagesListState> {
+    
+    constructor (props) {
+        super(props);
+        this.state = { selectedItem: null };
+    }
+    
+    handleSelect (target) {
+        this.setState({ selectedItem: target });
+    }
+    
+    render () {
+        return (
+            <ul className="h-ul">
+                {this.props.data.map((folder) =>
+                    <HImagesListFolderItem key={folder.name} data={folder}
+                        selectedItem={this.state.selectedItem}
+                        onSelected={this.handleSelect.bind(this)} />
+                )}
+            </ul>
+        );
+    }
+}
+
+interface HImagesListFolderItemProps extends React.Props<any> {
+    data?: HPackerFolder;
+    selectedItem?: HImageListItem;
+    onSelected?: (Object) => any;
+}
+
+interface HImagesListImageItemProps extends React.Props<any> {
     data?: HPackerImageData;
     onNameChanged?: (string) => any;
+    selectedItem?: HImageListItem;
+    onSelected?: (Object) => any;
 }
 
 class HImagesListItemState {
     detail_open: boolean = false;
 }
 
-class HImagesListItem extends React.Component<HImagesListItemProps, HImagesListItemState> {
-    
+class HImagesListFolderItem extends React.Component<HImagesListFolderItemProps, HImagesListItemState> {
     constructor(props) {
         super(props);
-        
+        this.state = new HImagesListItemState();
+    }
+    
+    selected() { return this.props.selectedItem === this; }
+    select() { if (this.props.onSelected) { this.props.onSelected.call(this, this); } }
+    
+    render() {
+        const { data } = this.props;
+        const { name, images } = data;
+        return (
+            <li className={`h-li${ this.selected() ? ' h-li-focus' : '' }`}>
+                <FlexView className="h-li-titlediv" spaceBetween alignItems="center" onClick={this.select.bind(this)}>
+                    <Icon size={36} entry={ this.state.detail_open ? 'folder_open' : 'folder' } />
+                    <span>{name}</span>
+                    <Button onClick={(() => this.setState({ detail_open: !this.state.detail_open })).bind(this)}>
+                        <Icon entry="expand_more"></Icon>
+                    </Button>
+                </FlexView>
+                <Collapse open={this.state.detail_open} className="h-li-subfolder-cont">
+                    <ul className="h-ul">
+                        {images.map((image) => (
+                            <HImagesListImageItem key={image.name} data={image}
+                                selectedItem={this.props.selectedItem}
+                                onSelected={this.props.onSelected} />
+                                )
+                            )
+                        }
+                    </ul>
+                </Collapse>
+            </li>
+        );
+    }
+}
+
+class HImagesListImageItem extends React.Component<HImagesListImageItemProps, HImagesListItemState> {
+    constructor(props) {
+        super(props);
         this.state = new HImagesListItemState();
     }
     
     onNameChanged(e) {
         if (this.props.onNameChanged) {
-            this.props.onNameChanged(e.target.value);
-        }
+            this.props.onNameChanged(e.target.value); }
     }
+    
+    selected() { return this.props.selectedItem === this; }
+    select() { if (this.props.onSelected) { this.props.onSelected.call(this, this); } }
     
     render() {
         const { data } = this.props;
@@ -215,22 +336,20 @@ class HImagesListItem extends React.Component<HImagesListItemProps, HImagesListI
         var style = {
             'backgroundImage': `url(${image.cache.element.src})`
         };
+        // <div>Name: <EditableText value={name} onChange={this.onNameChanged.bind(this)}></EditableText></div>
         return (
-            <li className="h-li">
-                <div>
-                    <FlexView spaceBetween alignItems="center">
-                        <span className="h-li-preview" style={style}></span>
-                        <span>{name}</span>
-                        <Button onClick={(() => this.setState({ detail_open: !this.state.detail_open })).bind(this)}>
-                            <Icon entry="expand_more"></Icon>
-                        </Button>
-                    </FlexView>
-                    <Collapse open={this.state.detail_open} className="h-li-detail-cont">
-                        <div>Name: <EditableText value={name} onChange={this.onNameChanged.bind(this)}></EditableText></div>
-                        <div>Original size: {image.size.x} x {image.size.y}</div>
-                        <div>Cropped size: {image.content_size.x} x {image.content_size.y}</div>
-                    </Collapse>
-                </div>
+            <li className={`h-li${ this.selected() ? ' h-li-focus' : '' }`}>
+                <FlexView className="h-li-titlediv" spaceBetween alignItems="center" onClick={this.select.bind(this)}>
+                    <span className="h-li-preview" style={style}></span>
+                    <span>{name}</span>
+                    <Button onClick={(() => this.setState({ detail_open: !this.state.detail_open })).bind(this)}>
+                        <Icon entry="expand_more"></Icon>
+                    </Button>
+                </FlexView>
+                <Collapse open={this.state.detail_open} className="h-li-detail-cont">
+                    <div>Original size: {image.size.x} x {image.size.y}</div>
+                    <div>Cropped size: {image.content_size.x} x {image.content_size.y}</div>
+                </Collapse>
             </li>
         );
     }
@@ -247,7 +366,7 @@ class HPreview extends React.Component<HPreviewProps, any> {
 	componentDidUpdate() {
 		var img = this.props.image;
 		if (img) {
-			canvasStoreAndClearCall(this.refs['canvas'],
+			canvasStoreAndClearCall(this.refs['canvas'] as any,
 				(ctx) => {
 					PackerImage.prototype.renderOnContext.call(img, ctx);
 					ctx.strokeRect(img.content_origin.x, img.content_origin.y,
@@ -285,16 +404,16 @@ interface HPackedCanvasProps extends React.HTMLProps<any> {
 
 // KEEP IN MIND, KEEP IN MIND!
 //  this component focuses on DRAWING only
-//   do not put code about packing inside!
+//   do not put code about packing (or anything else) inside!
 class HPackedCanvas extends React.Component<HPackedCanvasProps, any> {
     
 	componentDidUpdate () {
-		canvasStoreAndClearCall(this.refs['canvas'],
+		canvasStoreAndClearCall(this.refs['canvas'] as any,
 			(ctx) => {
 				React.Children.forEach(this.props.children,
 					(child) => {
 						canvasContextStoreCall(ctx, (ctx) => {
-							var c = (child as HPackedImage);
+							var c: HPackedImage = (child as any);
 							var rect : Rectangle = c.props.data.packedrect;
 							if (c.props.data.flipped) {
 								var pi = c.props.data.image;
@@ -317,14 +436,15 @@ class HPackedCanvas extends React.Component<HPackedCanvasProps, any> {
 	render () {
 		return (
 			<div className="h-packed-canvas" { ... this.props }>
-				<canvas ref="canvas" width={this.props.canvasSize.x} height={this.props.canvasSize.y}></canvas>
+				<canvas ref="canvas" width={this.props.canvasSize.x}
+                    height={this.props.canvasSize.y}></canvas>
 			</div>
 		);
 	}
 }
 
 interface HPackerAppState {
-	images? : Array<HPackerImageData>;
+	images? : HPackerFolder[];
 	packer? : RectangleBinPackerI;
     size?: Hector;
     showBorder?: boolean;
@@ -338,11 +458,12 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
 	constructor(props : any) {
 		super(props);
 		this.state = {
-			images: new Array<HPackerImageData>(),
+			images: new Array<HPackerFolder>(),
 			packer:  new RectangleBinPackerSkyline(new Hector(512, 512)),
             size: new Hector(512, 512),
             showBorder: true
 		};
+        this.state.images.push(new HPackerFolder('1'));
 		
 		this.handleDragOver = this.handleDragOver.bind(this);
 		this.handleDrop = this.handleDrop.bind(this);
@@ -366,8 +487,11 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
     //  so we can only repack it every time ...
     packerRepackAll() {
         this.state.packer = new RectangleBinPackerSkyline(this.state.size);
-        for (var image of this.state.images) {
-            this.packerInsert(image); }
+        for (var folder of this.state.images) {
+            for (var image of folder.images) {
+                this.packerInsert(image);
+            }
+        }
     }
 	
 	handleDragOver(e : React.DragEvent) {
@@ -381,6 +505,7 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
 			return; }
 		var name = file.name;
 		var reader = new FileReader();
+        var { images } = this.state;
 		reader.onload = (e) => {
 			var image = new Image();
 			image.onload = () => {
@@ -388,7 +513,7 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
 					var data = new HPackerImageData(cropped_img, name);
 					if (this.packerInsert(data)) {
                         this.setState({
-                            images : this.state.images.concat([ data ]) });
+                            images : (images[images.length-1].images.push(data), images) });
                     }
 				});
 			};
@@ -398,7 +523,6 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
 	}
     
 	render () {
-        
         var setSize = ((prop) =>
             (e) => {
                 var that = this;
@@ -408,21 +532,20 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
                 this.packerRepackAll();
             }
         );
-        
+        // <HPreview
+        //     image={this.state.images.length ? this.state.images[this.state.images.length-1].image : undefined}>
+        // </HPreview>
 		return (
             <FlexView style={{height: '100%'}} className="hi-workspace"
                     onDragOver={this.handleDragOver} onDrop={this.handleDrop}>
                 <FlexView column grow={1} style={{overflow: 'hidden'}}>
                     <HPackedCanvas canvasSize={this.state.size}
                             showBorder={this.state.showBorder} style={{flexGrow: 1}}>
-                        {this.state.images.map(function (img : HPackerImageData) {
-                            return <HPackedImage data={img}></HPackedImage>; })}
+                        {this.state.images.map((folder) =>
+                            folder.images.map((image) =>
+                                <HPackedImage data={image}></HPackedImage>))}
                     </HPackedCanvas>
                     <FlexElement>
-                        <HPreview
-                            image={this.state.images.length ? this.state.images[this.state.images.length-1].image : undefined}>
-                        </HPreview>
-                        
                         <input type="checkbox" id="hi-showborder"
                             checked={this.state.showBorder}
                             onChange={((e) => this.setState({ showBorder: e.target.checked })).bind(this)}>
@@ -437,15 +560,19 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
                             value={this.state.size.y.toString()}
                             onChange={setSize('y')}>
                         </input>
+                        <Button onToolbar>
+                            <Icon entry="save" />
+                        </Button>
+                        <Button onToolbar>
+                            <Icon entry="create_new_folder" />
+                        </Button>
+                        <Button onToolbar>
+                            <Icon entry="info_outline" />
+                        </Button>
                     </FlexElement>
                 </FlexView>
-                <FlexView>
-                    <HImagesList>
-                        {this.state.images.map((img : HPackerImageData) =>
-                            <HImagesListItem data={img}
-                                onNameChanged={((name) => this.setState({ images: (img.name = name, this.state.images) })).bind(this)} />
-                        )}
-                    </HImagesList>
+                <FlexView className="h-right-view">
+                    <HImagesList data={this.state.images} />
                 </FlexView>
             </FlexView>
 		);
