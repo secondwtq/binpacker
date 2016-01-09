@@ -1,5 +1,125 @@
 
+@import 'cd';
+
+body {
+    margin: 0;
+    height: 100vh;
+}
+
 html {
     background: url(/assets/images/bg.jpg) no-repeat center center fixed;
     background-size: cover;
+    font-size: 12px;
+}
+
+#rct-plchder {
+    position: relative;
+    height: 100%;
+    box-sizing: border-box;
+    
+    color: #D9D9D9;
+    text-shadow: 1px 1px 0 $darken-20;
+    padding: 1rem 2rem 2rem 2rem;
+    
+    .hi-workspace {
+        height: 100%;
+        background: linear-gradient(0, #606063, #545457);
+        box-shadow: 0 0.5rem 3rem $darken-60, 0 0 1px $lighter-30 inset;
+        border-radius: 3px;
+    }
+}
+
+.h-packed-canvas {
+    // max-height: 256px;
+    // max-width: 256px;
+    min-width: 512px;
+    max-height: 768px;
+    overflow: scroll;
+    text-align: center;
+    
+    background: linear-gradient(45deg, #333335, #424244);
+    border-radius: 3px;
+    box-shadow: 0 1px 1px $lighter-30;
+    
+    // enjoycss.com/gallery/gradient_patterns/hp
+    // lea.verou.me/2011/02/checkerboard-pattern-with-css3
+    canvas {
+        box-shadow: 1px 3px 1rem $darken-30;
+        border: 1px solid $lighter-20;
+        border-radius: 1px;
+        
+        $checkerbg-1: transparentize(black, 0.7);
+        $checkerbg-2: transparentize(white, 0.7);
+        $checker-gradient_: linear-gradient(45deg, $checkerbg-1 25%, transparent 25%,
+                            transparent 75%, $checkerbg-1 75%, $checkerbg-1 0%);
+        background: $checker-gradient_, $checker-gradient_, $checkerbg-2;
+        background-size: 1rem 1rem, 1rem 1rem;
+        background-position: 0 0, 0.5rem 0.5rem;
+        // background: linear-gradient(45deg, $checkerbg-1 25%, transparent 25%, transparent 75%, $checkerbg-1 75%, $checkerbg-1 0%);
+        // background-size: 1rem 1rem;
+        // background-position: 0 0;
+        // background: linear-gradient(45deg, $checkerbg-1 25%, transparent 25%, transparent 75%, $checkerbg-1 75%, $checkerbg-1 0%);
+        // background-size: 1rem 1rem;
+        // background-position: 0.5rem 0.5rem;
+    }
+}
+
+.h-ul {
+
+    background-color: #29292B;
+    box-shadow: 0.3rem 0.3rem 1rem $darken-60 inset;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow: scroll;
+
+    .h-li {
+        
+        border: 1px solid $lighter-30;
+        margin-bottom: -1px;
+        
+        .h-li-preview {
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 0.5rem;
+            width: 3rem;
+            height: 3rem;
+            border: solid 1px white;
+            
+            // stackoverflow.com/questions/9994493/scale-image-to-fit-a-bounding-box
+            //  CSS background is just awesome
+            background-position: center;
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+        
+        .h-li-detail-cont {
+            padding: 0.5rem;
+            border-top: 1px solid grey;
+            background-color: #29292B;
+        }
+    }
+
+}
+
+.rcoll-wrap {
+    overflow: hidden;
+	transition: height 300ms ease-in-out, opacity 300ms ease-in-out;
+	opacity: 0.0;
+    height: 0;
+    &.rcoll-open {
+        opacity: 1.0;
+    }
+}
+
+.rbtn {
+    background: linear-gradient(160deg, #5C5C5D, #383839);
+    border: 1px solid $darken-40;
+    color: #D1D1D2;
+    box-shadow: 0 1px 2px $darken-60, 0 0 1px $lighter-20 inset;
+    border-radius: 2px;
+    outline: none;
+    margin: 0 2px;
+    padding: 2px 4px;
+    vertical-align: middle;
 }
