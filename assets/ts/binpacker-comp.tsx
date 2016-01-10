@@ -295,7 +295,7 @@ class HImagesListFolderItem extends React.Component<HImagesListFolderItemProps, 
             <li className={`h-li${ this.selected() ? ' h-li-focus' : '' }`}>
                 <FlexView className="h-li-titlediv" spaceBetween alignItems="center" onClick={this.select.bind(this)}>
                     <Icon size={36} entry={ this.state.detail_open ? 'folder_open' : 'folder' } />
-                    <span>{name}</span>
+                    <span className="h-li-name">{name}</span>
                     <Button onClick={(() => this.setState({ detail_open: !this.state.detail_open })).bind(this)}>
                         <Icon entry="expand_more"></Icon>
                     </Button>
@@ -341,7 +341,7 @@ class HImagesListImageItem extends React.Component<HImagesListImageItemProps, HI
             <li className={`h-li${ this.selected() ? ' h-li-focus' : '' }`}>
                 <FlexView className="h-li-titlediv" spaceBetween alignItems="center" onClick={this.select.bind(this)}>
                     <span className="h-li-preview" style={style}></span>
-                    <span>{name}</span>
+                    <span className="h-li-name">{name}</span>
                     <Button onClick={(() => this.setState({ detail_open: !this.state.detail_open })).bind(this)}>
                         <Icon entry="expand_more"></Icon>
                     </Button>
@@ -499,27 +499,29 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
 		
 	handleDrop(e : React.DragEvent) {
 		e.preventDefault();
-		var file = e.dataTransfer.files[0];
-        // only continue if dropped in an image
-		if (!file.type.match(/image.*/)) {
-			return; }
-		var name = file.name;
-		var reader = new FileReader();
-        var { images } = this.state;
-		reader.onload = (e) => {
-			var image = new Image();
-			image.onload = () => {
-				cropImage(new CachedImageData(image), (cropped_img) => {
-					var data = new HPackerImageData(cropped_img, name);
-					if (this.packerInsert(data)) {
-                        this.setState({
-                            images : (images[images.length-1].images.push(data), images) });
-                    }
-				});
-			};
-			image.src = e.target.result;
-		};
-		reader.readAsDataURL(file);
+        // support for multiple files
+        Array.prototype.forEach.call(e.dataTransfer.files, (file) => {
+            // only continue if dropped in an image
+            if (!file.type.match(/image.*/)) {
+                return; }
+            var name = file.name;
+            var reader = new FileReader();
+            var { images } = this.state;
+            reader.onload = (e) => {
+                var image = new Image();
+                image.onload = () => {
+                    cropImage(new CachedImageData(image), (cropped_img) => {
+                        var data = new HPackerImageData(cropped_img, name);
+                        if (this.packerInsert(data)) {
+                            this.setState({
+                                images : (images[images.length-1].images.push(data), images) });
+                        }
+                    });
+                };
+                image.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
 	}
     
 	render () {
