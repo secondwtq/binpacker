@@ -72,6 +72,7 @@ interface FlexViewProps extends React.HTMLProps<any> {
     center?: boolean;
     spaceAround?: boolean;
     spaceBetween?: boolean;
+    flexEnd?: boolean;
     flexWrap?: boolean;
     flexWrapReverse?: boolean;
     alignItems?: string;
@@ -105,6 +106,8 @@ class FlexView extends React.Component<FlexViewProps, any> {
 			style.justifyContent = style.WebkitJustifyContent = 'space-around'; }
 		else if (this.props['spaceBetween']) {
 			style.justifyContent = style.WebkitJustifyContent = 'space-between'; }
+        else if (this.props['flexEnd']) {
+			style.justifyContent = style.WebkitJustifyContent = 'flex-end'; }
 
 		if (this.props['flexWrap']) {
 			style.flexWrap = style.WebkitFlexWrap = 'wrap'; }
@@ -215,6 +218,96 @@ class EditableText extends React.Component<EditableTextProps, any> {
     }
 }
 
+interface ModalPortalProps extends React.Props<any> {
+    leaveDuration: number;
+}
+
+class ModalPortal extends React.Component<ModalPortalProps, any> {
+    target: Element;
+    component: ModalDialog;
+    
+    constructor(props) {
+        super(props);
+    }
+    
+    componentWillMount() { }
+    componentDidMount() {
+        this.target = document.body.appendChild(document.createElement('div')) as Element;
+        this.update();
+    }
+    componentDidUpdate() {
+        this.update(); }
+    
+    update() {
+        this.component = ReactDOM.render(this.props.children as React.ReactElement<any>, this.target) as ModalDialog;
+    }
+    
+    unmountNode() {
+        ReactDOM.unmountComponentAtNode(this.target);
+        document.body.removeChild(this.target);
+    }
+    
+    componentWillUnmount() {
+        if (!this.props.leaveDuration) {
+            this.unmountNode();
+        } else {
+            this.component.handleWillUnmount(this.props.leaveDuration);
+            setTimeout(this.unmountNode.bind(this), this.props.leaveDuration);
+        }
+    }
+    
+    render() { return null; }
+}
+
+interface ModalDialogProps extends React.HTMLProps<any> {
+    fixed?: boolean;
+    classNameClose?: string;
+    onClose?: (ModalDialog) => any;
+}
+
+interface ModalDialogState {
+    closing: boolean;
+}
+
+class ModalDialog extends React.Component<ModalDialogProps, ModalDialogState> {
+    constructor(props) {
+        super(props);
+        this.state = {
+            closing: false };
+    }
+    
+    handleWillUnmount(duration) {
+        this.setState({ closing: true }); }
+        
+    close() {
+        if (this.props.onClose) {
+            this.props.onClose(this); }
+    }
+        
+    render() {
+        var style = { 'position': this.props.fixed ? 'fixed' : 'absolute' };
+        _.extend(style, this.props.style);
+        var cx = this.props.className ? `${this.props.className} ` : '';
+        if (this.state.closing) {
+            cx += this.props.classNameClose; }
+        return (
+            <div ref="child" className={cx} style={style}>
+                {this.props.children}
+            </div>
+        )
+    }
+}
+
+interface ModalContainerProps extends ModalPortalProps {
+    show: boolean;
+}
+
+class ModalContainer extends React.Component<ModalContainerProps, any> {
+    render() {
+        return this.props.show ? (<ModalPortal { ... this.props }>{this.props.children}</ModalPortal>) : null;
+    }
+}
+
 class HPackerFolder {
     constructor(public name: string) { }
     images: HPackerImageData[] = [ ];
@@ -247,6 +340,17 @@ class HImagesList extends React.Component<HImagesListProps, HImagesListState> {
     
     handleSelect (target) {
         this.setState({ selectedItem: target });
+    }
+    
+    getSelectedFolder () {
+        const { data } = this.props;
+        if (this.state.selectedItem) {
+            return data[data.length - 1];
+        } else {
+            if (data.length) {
+                return data[data.length - 1];
+            } else { return null; }
+        }
     }
     
     render () {
@@ -443,11 +547,96 @@ class HPackedCanvas extends React.Component<HPackedCanvasProps, any> {
 	}
 }
 
+class HModalImportImages extends React.Component<any, any> {
+    constructor(props) {
+        super(props);
+        this.state = { files: [ ] };
+    }
+    
+    close() {
+        this.setState({ files: [ ] });
+        (this.refs['dialog'] as ModalDialog).close();
+    }
+    
+    // TODO: promisify it, too
+    handleConfirm() {
+        if (this.props.onConfirm) {
+            this.props.onConfirm({
+                'target': this,
+                'files': this.state.files
+            });
+        }
+        this.close();
+    }
+    
+    handleSelectFile() {
+        var files = [ ];
+        Array.prototype.forEach.call((this.refs['files'] as HTMLInputElement).files,
+            (file) => files.push(file));
+        var newState = React.addons.update(this.state,
+            { files: { $push: files } });
+        this.setState(newState);
+    }
+    
+    // www.zhangxinxu.com/wordpress/2015/11/html-input-type-file
+    //  why 'position:absolute; clip:rect(0 0 0 0);'?
+    render () {
+        return (
+            <ModalContainer { ... this.props } leaveDuration={600}>
+                <ModalDialog ref="dialog" className="rhead" classNameClose="closing" onClose={this.props.onClose}>
+                    <h4>Select files:</h4>
+                    <Button><label htmlFor="import-file">Add File ...</label></Button>
+                    <input ref="files" type="file" id="import-file" accept="image/*" multiple
+                        style={{display: 'none'}} onChange={this.handleSelectFile.bind(this)} />
+                    <hr />
+                    <div className="ralign-right">
+                        <Button onClick={this.close.bind(this)}>
+                            Cancel
+                        </Button>
+                        <Button onClick={this.handleConfirm.bind(this)}>
+                            Import
+                        </Button>
+                    </div>
+                </ModalDialog>
+            </ModalContainer>
+        );
+    }
+}
+
+class HModalSaveResult extends React.Component<any, any> {
+    constructor(props) {
+        super(props);
+    }
+    
+    close() {
+        (this.refs['dialog'] as ModalDialog).close();
+    }
+    
+    render () {
+        return (
+            <ModalContainer { ... this.props } leaveDuration={600}>
+                <ModalDialog ref="dialog" className="rhead" classNameClose="closing" onClose={this.props.onClose}>
+                    <h4>Save Sprite</h4>
+                    <Button>Save Image to ...</Button>
+                    <Button>Save Definition to ...</Button>
+                    <hr />
+                    <div className="ralign-right">
+                        <Button onClick={this.close.bind(this)}>Close</Button>
+                    </div>
+                </ModalDialog>
+            </ModalContainer>
+        );
+    }
+}
+
 interface HPackerAppState {
 	images? : HPackerFolder[];
 	packer? : RectangleBinPackerI;
     size?: Hector;
     showBorder?: boolean;
+    
+    modalImport?: boolean;
+    modalSave?: boolean;
 }
 
 class HPackerApp extends React.Component<any, HPackerAppState> {
@@ -461,7 +650,10 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
 			images: new Array<HPackerFolder>(),
 			packer:  new RectangleBinPackerSkyline(new Hector(512, 512)),
             size: new Hector(512, 512),
-            showBorder: true
+            showBorder: true,
+            
+            modalImport: false,
+            modalSave: false
 		};
         this.state.images.push(new HPackerFolder('1'));
 		
@@ -493,6 +685,38 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
             }
         }
     }
+    
+    // TODO: should returns a Promise
+    //  maybe the change of state should also be delayed
+    addFile (file: File) {
+        var name = file.name;
+        var reader = new FileReader();
+        var { images } = this.state;
+        var that = this;
+        reader.onload = (e) => {
+            var image = new Image();
+            image.onload = () => {
+                cropImage(new CachedImageData(image), (cropped_img) => {
+                    var data = new HPackerImageData(cropped_img, name);
+                    if (this.packerInsert(data)) {
+                        this.setState({
+                            images : (images[images.length-1].images.push(data), images) });
+                    }
+                });
+            };
+            image.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    addFiles (files: FileList | File[]) {
+        Array.prototype.forEach.call(files, (file) => {
+            // only continue if dropped in an image
+            if (!file.type.match(/image.*/)) {
+                return; }
+            this.addFile(file);
+        });
+    }
 	
 	handleDragOver(e : React.DragEvent) {
 		e.preventDefault(); }
@@ -500,29 +724,19 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
 	handleDrop(e : React.DragEvent) {
 		e.preventDefault();
         // support for multiple files
-        Array.prototype.forEach.call(e.dataTransfer.files, (file) => {
-            // only continue if dropped in an image
-            if (!file.type.match(/image.*/)) {
-                return; }
-            var name = file.name;
-            var reader = new FileReader();
-            var { images } = this.state;
-            reader.onload = (e) => {
-                var image = new Image();
-                image.onload = () => {
-                    cropImage(new CachedImageData(image), (cropped_img) => {
-                        var data = new HPackerImageData(cropped_img, name);
-                        if (this.packerInsert(data)) {
-                            this.setState({
-                                images : (images[images.length-1].images.push(data), images) });
-                        }
-                    });
-                };
-                image.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
+        this.addFiles(e.dataTransfer.files);
 	}
+    
+    onToolbarCreateNewFolder() {
+        var folderName = (this.state.images.length + 1).toString();
+        var newFolder = new HPackerFolder(folderName);
+        var newState = React.addons.update(this.state, { images: { $push: [ newFolder ] } });
+        this.setState(newState);
+    }
+    
+    onModalAddFile(e: { files: FileList }) {
+        this.addFiles(e.files);
+    }
     
 	render () {
         var setSize = ((prop) =>
@@ -540,6 +754,13 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
 		return (
             <FlexView style={{height: '100%'}} className="hi-workspace"
                     onDragOver={this.handleDragOver} onDrop={this.handleDrop}>
+                    
+                <HModalImportImages fixed show={this.state.modalImport}
+                    onConfirm={this.onModalAddFile.bind(this)}
+                    onClose={() => this.setState({ modalImport: false })} />
+                <HModalSaveResult fixed show={this.state.modalSave}
+                    onClose={() => this.setState({ modalSave: false })} />
+                    
                 <FlexView column grow={1} style={{overflow: 'hidden'}}>
                     <HPackedCanvas canvasSize={this.state.size}
                             showBorder={this.state.showBorder} style={{flexGrow: 1}}>
@@ -547,31 +768,44 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
                             folder.images.map((image) =>
                                 <HPackedImage data={image}></HPackedImage>))}
                     </HPackedCanvas>
-                    <FlexElement>
-                        <input type="checkbox" id="hi-showborder"
-                            checked={this.state.showBorder}
-                            onChange={((e) => this.setState({ showBorder: e.target.checked })).bind(this)}>
-                        </input>
-                        <label htmlFor="hi-showborder">Show Border</label>
-                        
-                        <input type="number" min="0" max="4096" step="256"
-                            value={this.state.size.x.toString()}
-                            onChange={setSize('x')}>
-                        </input>
-                        <input type="number" min="0" max="4096" step="256"
-                            value={this.state.size.y.toString()}
-                            onChange={setSize('y')}>
-                        </input>
-                        <Button onToolbar>
-                            <Icon entry="save" />
-                        </Button>
-                        <Button onToolbar>
-                            <Icon entry="create_new_folder" />
-                        </Button>
-                        <Button onToolbar>
-                            <Icon entry="info_outline" />
-                        </Button>
-                    </FlexElement>
+                    <FlexView column>
+                        <FlexView>
+                            <input type="checkbox" id="hi-showborder"
+                                checked={this.state.showBorder}
+                                onChange={((e) => this.setState({ showBorder: e.target.checked })).bind(this)}>
+                            </input>
+                            <label htmlFor="hi-showborder">Show Border</label>
+                            
+                            <input type="number" min="0" max="4096" step="256"
+                                value={this.state.size.x.toString()}
+                                onChange={setSize('x')}>
+                            </input>
+                            <input type="number" min="0" max="4096" step="256"
+                                value={this.state.size.y.toString()}
+                                onChange={setSize('y')}>
+                            </input>
+                        </FlexView>
+                        <div><hr className="rnomargin" /></div>
+                        <FlexView spaceBetween alignItems="center">
+                            <div>
+                                <Button onToolbar onClick={() => this.setState({ modalImport: true })}>
+                                    <Icon entry="add_circle_outline" />
+                                </Button>
+                                <Button onToolbar onClick={() => this.setState({ modalSave: true })}>
+                                    <Icon entry="save" />
+                                </Button>
+                            </div>
+                            <div>by secondwtq 2015-2016</div>
+                            <div>
+                                <Button onToolbar>
+                                    <Icon entry="info_outline" />
+                                </Button>
+                                <Button onToolbar onClick={this.onToolbarCreateNewFolder.bind(this)}>
+                                    <Icon entry="create_new_folder" />
+                                </Button>
+                            </div>
+                        </FlexView>
+                    </FlexView>
                 </FlexView>
                 <FlexView className="h-right-view">
                     <HImagesList data={this.state.images} />

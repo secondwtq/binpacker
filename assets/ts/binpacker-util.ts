@@ -6,7 +6,7 @@ function canvasContextStoreCall(ctx : CanvasRenderingContext2D,
 	ctx.restore();
 }
 
-function canvasStoreAndClearCall(element : Element, 
+function canvasStoreAndClearCall(element : HTMLCanvasElement, 
 		func : (ctx : CanvasRenderingContext2D) => void) {
 	var canvas = <HTMLCanvasElement>element;
 	var ctx : CanvasRenderingContext2D = element.getContext('2d');
