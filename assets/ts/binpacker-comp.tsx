@@ -69,6 +69,7 @@ interface FlexViewProps extends React.HTMLProps<any> {
     column?: boolean;
     reversed?: boolean;
     grow?: number;
+    shrink?: number;
     center?: boolean;
     spaceAround?: boolean;
     spaceBetween?: boolean;
@@ -98,8 +99,10 @@ class FlexView extends React.Component<FlexViewProps, any> {
 			} else {
 				style.flexDirection = style.WebkitFlexDirection = 'column'; }
 		}
-		if (this.props['grow']) {
+		if (this.props['grow'] !== undefined) {
 			style.flexGrow = style.WebkitFlexGrow = this.props['grow']; }
+        if (this.props['shrink'] !== undefined) {
+			style.flexShrink = style.WebkitFlexShrink = this.props['shrink']; }
 		if (this.props['center']) {
 			style.justifyContent = style.WebkitJustifyContent = 'center'; }
 		else if (this.props['spaceAround']) {
@@ -120,7 +123,7 @@ class FlexView extends React.Component<FlexViewProps, any> {
 	}
 }
 
-interface FlexElementProps extends React.Props<any> {
+interface FlexElementProps extends React.HTMLProps<any> {
     grow?: number;
     style?: any;
 }
@@ -174,52 +177,76 @@ class Button extends React.Component<ButtonProps, any> {
     }
 }
 
-interface EditableTextProps extends React.Props<any> {
+interface EditableTextProps extends React.HTMLProps<any> {
     disabled?: boolean;
-    isSpan?: boolean;
-    onChange?: (Event) => any;
+    onChange?: (Object) => any;
     value?: string;
 }
 
-class EditableText extends React.Component<EditableTextProps, any> {
-    
+interface EditableTextState {
+    editing?: boolean;
+    tempValue?: string;
+}
+
+class EditableText extends React.Component<EditableTextProps, EditableTextState> {
     constructor(props) {
         super(props);
         
-        this.handleChange = this.handleChange.bind(this);
+        this.state = {
+            editing: false,
+            tempValue: props.value,
+        };
     }
     
-    handleChange(e) {
-        if (this.props.onChange) {
-            e.target = { value: (this.refs['ele'] as HTMLElement).innerHTML };
-            this.props.onChange(e);
+    componentWillUpdate(nextProps, nextState: EditableTextState) {
+        if (this.state.editing && !nextState.editing) {
+            var nextValue = this.state.tempValue;
+            if (nextValue !== this.props.value) {
+                if (this.props.onChange) {
+                    var e = { target: { value: this.state.tempValue } };
+                    this.props.onChange(e);
+                }
+            }
+        } else if (!this.state.editing && nextState.editing) {
+            this.setState({ tempValue: this.props.value });
         }
     }
     
+    componentDidUpdate(prevProps: EditableTextProps, prevState) {
+        if (this.state.editing) {
+            (this.refs['element'] as HTMLInputElement).focus();
+        }
+    }
+    
+    handleClick(e) {
+        if (!this.props.disabled) {
+            this.setState({ editing: true });
+        }
+    }
+    
+    handleEditBlur(e) {
+        this.setState({ editing: false });
+    }
+    
+    handleEditChange(e) {
+        this.setState({ tempValue: e.target.value });
+    }
+    
     render() {
-        const { handleChange, props } = this;
-        if (props.isSpan) {
-            return (
-                <span { ... props } ref="ele"
-                        contentEditable={!props.disabled}
-                        onInput={handleChange} onBlur={handleChange}>
-                    {props.value}
-                </span>
-            );
+        const { handleClick, handleEditBlur, handleEditChange, props } = this;
+        if (this.state.editing) {
+            // TODO: handle keyboard confirm
+            return (<input { ... this.props } onBlur={handleEditBlur.bind(this)}
+                        onChange={handleEditChange.bind(this)}
+                        ref="element" value={this.state.tempValue} />);
         } else {
-            return (
-                <div { ... props } ref="ele"
-                        contentEditable={!props.disabled}
-                        onInput={handleChange} onBlur={handleChange}>
-                    {props.value}
-                </div>
-            );
+            return (<span { ... this.props } onClick={handleClick.bind(this)}>{props.value}</span>)
         }
     }
 }
 
 interface ModalPortalProps extends React.Props<any> {
-    leaveDuration: number;
+    leaveDuration?: number;
 }
 
 class ModalPortal extends React.Component<ModalPortalProps, any> {
@@ -299,7 +326,8 @@ class ModalDialog extends React.Component<ModalDialogProps, ModalDialogState> {
 }
 
 interface ModalContainerProps extends ModalPortalProps {
-    show: boolean;
+    show?: boolean;
+    onClose?: (ModalDialog) => any;
 }
 
 class ModalContainer extends React.Component<ModalContainerProps, any> {
@@ -325,6 +353,8 @@ type HImageListItem = HImagesListFolderItem | HImagesListImageItem;
 
 interface HImagesListProps extends React.Props<any> {
     data?: HPackerFolder[];
+    onChangeName?: Function;
+    callbackAddFilesTo?: Function;
 }
 
 interface HImagesListState {
@@ -353,13 +383,21 @@ class HImagesList extends React.Component<HImagesListProps, HImagesListState> {
         }
     }
     
+    onChangeName (e, target) {
+        if (this.props.onChangeName) {
+            this.props.onChangeName.call(this, e, target);
+        }
+    }
+    
     render () {
         return (
             <ul className="h-ul">
                 {this.props.data.map((folder) =>
                     <HImagesListFolderItem key={folder.name} data={folder}
                         selectedItem={this.state.selectedItem}
-                        onSelected={this.handleSelect.bind(this)} />
+                        onSelected={this.handleSelect.bind(this)}
+                        onChangeName={this.onChangeName.bind(this)}
+                        callbackAddFilesTo={this.props.callbackAddFilesTo} />
                 )}
             </ul>
         );
@@ -370,6 +408,8 @@ interface HImagesListFolderItemProps extends React.Props<any> {
     data?: HPackerFolder;
     selectedItem?: HImageListItem;
     onSelected?: (Object) => any;
+    onChangeName?: Function;
+    callbackAddFilesTo?: Function;
 }
 
 interface HImagesListImageItemProps extends React.Props<any> {
@@ -379,32 +419,63 @@ interface HImagesListImageItemProps extends React.Props<any> {
     onSelected?: (Object) => any;
 }
 
-class HImagesListItemState {
-    detail_open: boolean = false;
+interface HImagesListItemState {
+    detail_open?: boolean;
+    modalImport?: boolean;
 }
 
 class HImagesListFolderItem extends React.Component<HImagesListFolderItemProps, HImagesListItemState> {
     constructor(props) {
         super(props);
-        this.state = new HImagesListItemState();
+        this.state = {
+            detail_open: false,
+            modalImport: false
+        };
     }
     
     selected() { return this.props.selectedItem === this; }
     select() { if (this.props.onSelected) { this.props.onSelected.call(this, this); } }
+    
+    onChangeName(e, target) {
+        if (this.props.onChangeName) {
+            this.props.onChangeName.call(this, e, target);
+        }
+    }
+    
+    onToolbarRemove() {
+        
+    }
+    
+    onModalAddFile(e) {
+        this.props.callbackAddFilesTo(e.files, this.props.data);
+    }
     
     render() {
         const { data } = this.props;
         const { name, images } = data;
         return (
             <li className={`h-li${ this.selected() ? ' h-li-focus' : '' }`}>
+                <HModalImportImages show={this.state.modalImport}
+                    onConfirm={this.onModalAddFile.bind(this)}
+                    onClose={() => this.setState({ modalImport: false })} />
+                    
                 <FlexView className="h-li-titlediv" spaceBetween alignItems="center" onClick={this.select.bind(this)}>
                     <Icon size={36} entry={ this.state.detail_open ? 'folder_open' : 'folder' } />
-                    <span className="h-li-name">{name}</span>
+                    <EditableText className="h-li-name" value={name}
+                        onChange={(e) => this.onChangeName(e, this.props.data)} />
                     <Button onClick={(() => this.setState({ detail_open: !this.state.detail_open })).bind(this)}>
                         <Icon entry="expand_more"></Icon>
                     </Button>
                 </FlexView>
                 <Collapse open={this.state.detail_open} className="h-li-subfolder-cont">
+                    <hr className="rnomargin" />
+                    <FlexView flexEnd>
+                        <Button onToolbar onClick={() => this.setState({ modalImport: true })}>
+                            <Icon entry="add" />
+                        </Button>
+                        <Button onToolbar><Icon entry="clear" /></Button>
+                    </FlexView>
+                    <hr className="rnomargin" />
                     <ul className="h-ul">
                         {images.map((image) => (
                             <HImagesListImageItem key={image.name} data={image}
@@ -423,7 +494,9 @@ class HImagesListFolderItem extends React.Component<HImagesListFolderItemProps, 
 class HImagesListImageItem extends React.Component<HImagesListImageItemProps, HImagesListItemState> {
     constructor(props) {
         super(props);
-        this.state = new HImagesListItemState();
+        this.state = {
+            detail_open: false
+        }
     }
     
     onNameChanged(e) {
@@ -510,7 +583,6 @@ interface HPackedCanvasProps extends React.HTMLProps<any> {
 //  this component focuses on DRAWING only
 //   do not put code about packing (or anything else) inside!
 class HPackedCanvas extends React.Component<HPackedCanvasProps, any> {
-    
 	componentDidUpdate () {
 		canvasStoreAndClearCall(this.refs['canvas'] as any,
 			(ctx) => {
@@ -536,18 +608,24 @@ class HPackedCanvas extends React.Component<HPackedCanvasProps, any> {
 					});
 			});
 	}
+    
+    getCanvasRef() {
+        return (this.refs['canvas'] as HTMLCanvasElement);
+    }
 	
 	render () {
 		return (
-			<div className="h-packed-canvas" { ... this.props }>
-				<canvas ref="canvas" width={this.props.canvasSize.x}
-                    height={this.props.canvasSize.y}></canvas>
-			</div>
+            <canvas { ... this.props } ref="canvas" width={this.props.canvasSize.x}
+                height={this.props.canvasSize.y} />
 		);
 	}
 }
 
-class HModalImportImages extends React.Component<any, any> {
+interface HModalImportImagesProps extends ModalContainerProps {
+    onConfirm: Function;
+}
+
+class HModalImportImages extends React.Component<HModalImportImagesProps, any> {
     constructor(props) {
         super(props);
         this.state = { files: [ ] };
@@ -585,9 +663,8 @@ class HModalImportImages extends React.Component<any, any> {
             <ModalContainer { ... this.props } leaveDuration={600}>
                 <ModalDialog ref="dialog" className="rhead" classNameClose="closing" onClose={this.props.onClose}>
                     <h4>Select files:</h4>
-                    <Button><label htmlFor="import-file">Add File ...</label></Button>
                     <input ref="files" type="file" id="import-file" accept="image/*" multiple
-                        style={{display: 'none'}} onChange={this.handleSelectFile.bind(this)} />
+                        onChange={this.handleSelectFile.bind(this)} />
                     <hr />
                     <div className="ralign-right">
                         <Button onClick={this.close.bind(this)}>
@@ -603,13 +680,29 @@ class HModalImportImages extends React.Component<any, any> {
     }
 }
 
-class HModalSaveResult extends React.Component<any, any> {
+interface HModalSaveResultProps extends ModalContainerProps {
+    data?: HPackerFolder[];
+    canvasSize?: Hector;
+}
+
+class HModalSaveResult extends React.Component<HModalSaveResultProps, any> {
     constructor(props) {
         super(props);
     }
     
+    componentDidUpdate() {
+        if (this.props.show) {
+            (this.refs['canvas'] as HPackedCanvas).forceUpdate();
+        }
+    }
+    
     close() {
         (this.refs['dialog'] as ModalDialog).close();
+    }
+    
+    saveImage(e: MouseEvent) {
+        var imageData = (this.refs['canvas'] as HPackedCanvas).getCanvasRef().toDataURL('image/png');
+        (this.refs['linkSaveImage'] as HTMLLinkElement).href = imageData;
     }
     
     render () {
@@ -617,7 +710,18 @@ class HModalSaveResult extends React.Component<any, any> {
             <ModalContainer { ... this.props } leaveDuration={600}>
                 <ModalDialog ref="dialog" className="rhead" classNameClose="closing" onClose={this.props.onClose}>
                     <h4>Save Sprite</h4>
-                    <Button>Save Image to ...</Button>
+                    <hr />
+                    <div className="hi-save-preview">
+                        <HPackedCanvas ref="canvas" showBorder={false} canvasSize={this.props.canvasSize}>
+                            {this.props.data.map((folder) =>
+                                folder.images.map((image) =>
+                                    <HPackedImage data={image}></HPackedImage>))}
+                        </HPackedCanvas>
+                    </div>
+                    <hr />
+                    <a ref="linkSaveImage" href="#" onClick={this.saveImage.bind(this)} download="sprite.png">
+                        <Button>Save Image to ...</Button>
+                    </a>
                     <Button>Save Definition to ...</Button>
                     <hr />
                     <div className="ralign-right">
@@ -688,8 +792,9 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
     
     // TODO: should returns a Promise
     //  maybe the change of state should also be delayed
-    addFile (file: File) {
+    addFileTo (file: File, folder: HPackerFolder) {
         var name = file.name;
+        console.log(`adding ${name} ...`);
         var reader = new FileReader();
         var { images } = this.state;
         var that = this;
@@ -700,7 +805,7 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
                     var data = new HPackerImageData(cropped_img, name);
                     if (this.packerInsert(data)) {
                         this.setState({
-                            images : (images[images.length-1].images.push(data), images) });
+                            images : (folder.images.push(data), images) });
                     }
                 });
             };
@@ -709,12 +814,12 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
         reader.readAsDataURL(file);
     }
     
-    addFiles (files: FileList | File[]) {
+    addFilesTo (files: FileList | File[], folder: HPackerFolder) {
         Array.prototype.forEach.call(files, (file) => {
             // only continue if dropped in an image
             if (!file.type.match(/image.*/)) {
                 return; }
-            this.addFile(file);
+            this.addFileTo(file, folder);
         });
     }
 	
@@ -724,7 +829,7 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
 	handleDrop(e : React.DragEvent) {
 		e.preventDefault();
         // support for multiple files
-        this.addFiles(e.dataTransfer.files);
+        this.addFilesTo(e.dataTransfer.files, (this.refs['layers'] as HImagesList).getSelectedFolder());
 	}
     
     onToolbarCreateNewFolder() {
@@ -735,7 +840,12 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
     }
     
     onModalAddFile(e: { files: FileList }) {
-        this.addFiles(e.files);
+        this.addFilesTo(e.files, (this.refs['layers'] as HImagesList).getSelectedFolder());
+    }
+    
+    onNameChanged(e, target) {
+        target.name = e.target.value;
+        this.setState({ images: this.state.images });
     }
     
 	render () {
@@ -755,21 +865,24 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
             <FlexView style={{height: '100%'}} className="hi-workspace"
                     onDragOver={this.handleDragOver} onDrop={this.handleDrop}>
                     
-                <HModalImportImages fixed show={this.state.modalImport}
+                <HModalImportImages show={this.state.modalImport}
                     onConfirm={this.onModalAddFile.bind(this)}
                     onClose={() => this.setState({ modalImport: false })} />
-                <HModalSaveResult fixed show={this.state.modalSave}
+                <HModalSaveResult show={this.state.modalSave}
+                    data={this.state.images} canvasSize={this.state.size}
                     onClose={() => this.setState({ modalSave: false })} />
                     
                 <FlexView column grow={1} style={{overflow: 'hidden'}}>
-                    <HPackedCanvas canvasSize={this.state.size}
-                            showBorder={this.state.showBorder} style={{flexGrow: 1}}>
-                        {this.state.images.map((folder) =>
-                            folder.images.map((image) =>
-                                <HPackedImage data={image}></HPackedImage>))}
-                    </HPackedCanvas>
-                    <FlexView column>
-                        <FlexView>
+                    <FlexElement className="h-packed-canvas" grow={1}>
+                        <HPackedCanvas canvasSize={this.state.size}
+                                showBorder={this.state.showBorder} style={{flexGrow: 1}}>
+                            {this.state.images.map((folder) =>
+                                folder.images.map((image) =>
+                                    <HPackedImage data={image}></HPackedImage>))}
+                        </HPackedCanvas>
+                    </FlexElement>
+                    <FlexView column shrink={0}>
+                        <FlexView style={{padding: '4px'}}>
                             <input type="checkbox" id="hi-showborder"
                                 checked={this.state.showBorder}
                                 onChange={((e) => this.setState({ showBorder: e.target.checked })).bind(this)}>
@@ -807,8 +920,11 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
                         </FlexView>
                     </FlexView>
                 </FlexView>
+                
                 <FlexView className="h-right-view">
-                    <HImagesList data={this.state.images} />
+                    <HImagesList ref="layers" data={this.state.images}
+                        onChangeName={this.onNameChanged.bind(this)}
+                        callbackAddFilesTo={this.addFilesTo.bind(this)} />
                 </FlexView>
             </FlexView>
 		);

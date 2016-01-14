@@ -9,6 +9,7 @@ body {
 html {
     background: url(/assets/images/bg.jpg) center center / cover no-repeat fixed;
     font-size: 12px;
+    font-family: sans-serif;
     
     color: #D9D9D9;
     text-shadow: 1px 1px 0 $darken-20;
@@ -39,13 +40,30 @@ html {
     border-radius: 3px;
     box-shadow: 0 1px 1px $lighter-30;
     
-    // enjoycss.com/gallery/gradient_patterns/hp
-    // lea.verou.me/2011/02/checkerboard-pattern-with-css3
     canvas {
         box-shadow: 1px 3px 1rem $darken-30;
         border: 1px solid $lighter-20;
         border-radius: 1px;
-        
+    }
+}
+
+.hi-save-preview {
+    text-align: center;
+    
+    border: 2px solid #FC0;
+    border-radius: 3px;
+    box-shadow: 0 0 5px $lighter-50 inset, 0 0 0 2px black inset,
+                0 0 0px 1px black, 1px 2px 5px $darken-70;
+    
+    canvas {
+        border-radius: 3px;
+        max-width: 80vw;
+        max-height: 60vh;
+    }
+}
+
+.h-packed-canvas, .hi-save-preview {
+    canvas {
         $checkerbg-1: transparentize(black, 0.7);
         $checkerbg-2: transparentize(white, 0.7);
         $checker-gradient_: linear-gradient(45deg, $checkerbg-1 25%, transparent 25%,
@@ -107,8 +125,18 @@ html {
         //  it's beautiful
         // www.zhangxinxu.com/wordpress/2009/09/%E5%85%B3%E4%BA%8E%E6%96%87%E5%AD%97%E5%86%85%E5%AE%B9%E6%BA%A2%E5%87%BA%E7%94%A8%E7%82%B9%E7%82%B9%E7%82%B9-%E7%9C%81%E7%95%A5%E5%8F%B7%E8%A1%A8%E7%A4%BA
         .h-li-name {
-            text-overflow: ellipsis;
-            overflow: hidden;
+            @at-root #{selector_unify(&, span)} {
+                text-overflow: ellipsis;
+                overflow: hidden;
+            }
+            @at-root #{selector_unify(&, input)} {
+                outline: none;
+                border-radius: 1px;
+                color: #EEE;
+                background: #222;
+                border: 1px solid $darken-50;
+                box-shadow: 1px 1px 2px $darken-50 inset;
+            }
         }
 
         .h-li-subfolder-cont {
@@ -133,12 +161,13 @@ html {
     background: linear-gradient(to bottom, #5C5C5D, #383839);
     border: 1px solid $darken-40;
     color: #D1D1D2;
-    box-shadow: 0 1px 2px $darken-60, 0 0 1px $lighter-20 inset, 0 1px 0 $lighter-20 inset;
+    box-shadow: 0 1px 2px $darken-60, 0 0 1px $lighter-20 inset, 0 1px 1px $lighter-20 inset;
     border-radius: 2px;
     outline: none;
     margin: 0 2px;
     padding: 2px 4px;
     vertical-align: middle;
+    cursor: pointer;
     
     &.rbtn-toolbar {
         margin: 0 -1px 0 0;
