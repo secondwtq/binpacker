@@ -10,8 +10,8 @@ var tsConfig = tsb.create('tsconfig.json');
 function buildJS(isDist) {
     var ret = gulp.src([
                 'typings/**/*.d.ts',
-                'assets/ts/*.ts',
-                'assets/ts/*.tsx'
+                'assets/ts/**/*.ts',
+                'assets/ts/**/*.tsx'
             ])
             .pipe(tsConfig());
     if (isDist) {
