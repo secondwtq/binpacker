@@ -1,7 +1,8 @@
 
 "use strict";
 
-module HowardUtility.BasicControls {
+import * as React from 'react';
+import * as _ from 'lodash';
     
 interface IconProps extends React.Props<any> {
     className?: string;
@@ -10,7 +11,7 @@ interface IconProps extends React.Props<any> {
     style?: any;
 }
 
-export class Icon extends React.Component<IconProps, any> {
+export default class Icon extends React.Component<IconProps, any> {
     static defaultProps = {
        'size': 18
     }
@@ -24,6 +25,4 @@ export class Icon extends React.Component<IconProps, any> {
         }, this.props.style);
         return (<i style={style} className={className} { ... this.props }>{this.props.entry}</i>);
     }
-}
-    
 }

@@ -1,12 +1,15 @@
 "use strict";
 
-module HowardUtility.BinPacker {
+import * as React from 'react';
+
+import Hector from './hector';
+import { PackerImage, PackerImageStripped } from './binpacker-index';
     
 interface HPreviewProps extends React.Props<any> {
 	image : PackerImageStripped;
 }
 
-class HPreview extends React.Component<HPreviewProps, any> {
+export default class HPreview extends React.Component<HPreviewProps, any> {
 	
 	// if using componentWillUpdate, content painted on canvas would
 	//	be reset when resizing it
@@ -29,6 +32,4 @@ class HPreview extends React.Component<HPreviewProps, any> {
 		} else { size = new Hector(128, 128); }
 		return (<canvas ref="canvas" width={size.x} height={size.y}></canvas>);
 	}
-}
-    
 }

@@ -1,7 +1,7 @@
 
 "use strict";
 
-module HowardUtility.BasicControls {
+import * as React from 'react';
     
 interface EditableTextProps extends React.HTMLProps<any> {
     disabled?: boolean;
@@ -14,7 +14,7 @@ interface EditableTextState {
     tempValue?: string;
 }
 
-export class EditableText extends React.Component<EditableTextProps, EditableTextState> {
+export default class EditableText extends React.Component<EditableTextProps, EditableTextState> {
     constructor(props) {
         super(props);
         
@@ -69,6 +69,4 @@ export class EditableText extends React.Component<EditableTextProps, EditableTex
             return (<span { ... this.props } onClick={handleClick.bind(this)}>{props.value}</span>)
         }
     }
-}
-    
 }

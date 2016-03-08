@@ -1,7 +1,7 @@
 
 "use strict";
 
-module HowardUtility.BasicControls {
+import * as React from 'react';
     
 interface CollapseProps extends React.Props<any> {
     open?: boolean;
@@ -12,7 +12,7 @@ interface CollapseState {
     inAnimate?: boolean;
 }
 
-export class Collapse extends React.Component<any, CollapseState> {
+export default class Collapse extends React.Component<any, CollapseState> {
     constructor(props) {
         super(props);
         this.state = {
@@ -62,6 +62,4 @@ export class Collapse extends React.Component<any, CollapseState> {
             </div>
         );
     }
-}
-    
 }

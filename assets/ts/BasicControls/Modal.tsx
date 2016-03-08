@@ -1,7 +1,9 @@
 
 "use strict";
 
-module HowardUtility.BasicControls {
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
+import * as _ from 'lodash';
 
 interface ModalPortalProps extends React.Props<any> {
     leaveDuration?: number;
@@ -92,6 +94,4 @@ export class ModalContainer extends React.Component<ModalContainerProps, any> {
     render() {
         return this.props.show ? (<ModalPortal { ... this.props }>{this.props.children}</ModalPortal>) : null;
     }
-}
-
 }

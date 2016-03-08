@@ -1,18 +1,20 @@
 "use strict";
 
-module HowardUtility.BinPacker {
+import * as React from 'react';
 
-import Button = BasicControls.Button;
-import ModalContainerProps = BasicControls.ModalContainerProps;
-import ModalContainer = BasicControls.ModalContainer;
-import ModalDialog = BasicControls.ModalDialog;
+import Button from './BasicControls/Button';
+import { ModalContainerProps, ModalContainer, ModalDialog } from './BasicControls/Modal';
+
+import Hector from './hector';
+import { HPackerFolder } from './binpacker-uidata';
+import { HPackedCanvas, HPackedImage } from './HPackedCanvas';
 
 interface HModalSaveResultProps extends ModalContainerProps {
     data?: HPackerFolder[];
     canvasSize?: Hector;
 }
 
-export class HModalSaveResult extends React.Component<HModalSaveResultProps, any> {
+export default class HModalSaveResult extends React.Component<HModalSaveResultProps, any> {
     constructor(props) {
         super(props);
     }
@@ -58,6 +60,4 @@ export class HModalSaveResult extends React.Component<HModalSaveResultProps, any
             </ModalContainer>
         );
     }
-}
-    
 }

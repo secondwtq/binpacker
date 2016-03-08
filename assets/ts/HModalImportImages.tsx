@@ -1,17 +1,16 @@
 "use strict";
 
-module HowardUtility.BinPacker {
+import * as React from 'react';
+import ReactAddonUpdate = require('react-addons-update');
 
-import Button = BasicControls.Button;
-import ModalContainerProps = BasicControls.ModalContainerProps;
-import ModalContainer = BasicControls.ModalContainer;
-import ModalDialog = BasicControls.ModalDialog;
+import Button from './BasicControls/Button';
+import { ModalContainerProps, ModalContainer, ModalDialog } from './BasicControls/Modal';
 
 interface HModalImportImagesProps extends ModalContainerProps {
     onConfirm: Function;
 }
 
-export class HModalImportImages extends React.Component<HModalImportImagesProps, any> {
+export default class HModalImportImages extends React.Component<HModalImportImagesProps, any> {
     constructor(props) {
         super(props);
         this.state = { files: [ ] };
@@ -37,7 +36,7 @@ export class HModalImportImages extends React.Component<HModalImportImagesProps,
         var files = [ ];
         Array.prototype.forEach.call((this.refs['files'] as HTMLInputElement).files,
             (file) => files.push(file));
-        var newState = React.addons.update(this.state,
+        var newState = ReactAddonUpdate(this.state,
             { files: { $push: files } });
         this.setState(newState);
     }
@@ -64,6 +63,4 @@ export class HModalImportImages extends React.Component<HModalImportImagesProps,
             </ModalContainer>
         );
     }
-}
- 
 }

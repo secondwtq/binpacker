@@ -1,12 +1,14 @@
 
-function canvasContextStoreCall(ctx : CanvasRenderingContext2D, 
+namespace Utility {
+
+export function canvasContextStoreCall(ctx : CanvasRenderingContext2D, 
 		func : (ctx : CanvasRenderingContext2D) => void) {
 	ctx.save();
 	func(ctx);
 	ctx.restore();
 }
 
-function canvasStoreAndClearCall(element : HTMLCanvasElement, 
+export function canvasStoreAndClearCall(element : HTMLCanvasElement, 
 		func : (ctx : CanvasRenderingContext2D) => void) {
 	var canvas = <HTMLCanvasElement>element;
 	var ctx : CanvasRenderingContext2D = element.getContext('2d');
@@ -17,7 +19,7 @@ function canvasStoreAndClearCall(element : HTMLCanvasElement,
 }
 
 // stackoverflow.com/questions/2677671/how-do-i-rotate-a-single-object-on-an-html-5-canvas
-function canvasDrawImageRotated(ctx : CanvasRenderingContext2D, img,
+export function canvasDrawImageRotated(ctx : CanvasRenderingContext2D, img,
 		ix : number, iy : number, iw : number, ih : number, 
 		x : number, y : number, width : number, height : number, rad : number){
 	ctx.translate(x + width / 2, y + height / 2);
@@ -27,5 +29,9 @@ function canvasDrawImageRotated(ctx : CanvasRenderingContext2D, img,
     ctx.translate(-(x + width / 2), -(y + height / 2));
 }
 
-function mToRad(val : number) {
+export function mToRad(val : number) {
 	return val * Math.PI / 180; }
+    
+}
+
+export default Utility;

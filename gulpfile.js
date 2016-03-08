@@ -1,19 +1,56 @@
 
 var gulp = require('gulp');
-var tsb = require('gulp-tsb');
 var uglify = require('gulp-uglify');
 var del = require('del');
 var sass = require('gulp-sass');
 var minify = require('gulp-minify-css');
 
-var tsConfig = tsb.create('tsconfig.json');
+var source = require('vinyl-source-stream');
+var browserify = require('browserify');
+var babelify = require('babelify');
+var gutil = require('gulp-util');
+var tsify = require('tsify');
+
+var dependencies = [
+    'react',
+    'react-dom',
+    'freezer-js',
+    'lodash',
+
+    'react-addons-update'
+];
+
+var timeToRun = 0;
+
+function bundle(production) {
+    timeToRun++;
+    
+    var bundler = browserify()
+        .add('assets/ts/binpacker-comp.tsx')
+        .add('tsd.d.ts')
+        .plugin(tsify);
+        
+    if (!production) {
+		if (timeToRun === 1) {
+			browserify({
+				'require': dependencies,
+				'debug': true
+			}).bundle()
+				.on('error', gutil.log)
+				.pipe(source('vendor.js'))
+				.pipe(gulp.dest('assets/js'));
+		}
+		dependencies.forEach((dep) =>
+				bundler.external(dep));
+	}
+        
+    return bundler.bundle()
+        .on('error', gutil.log)
+        .pipe(source('bundle.js'));
+}
+
 function buildJS(isDist) {
-    var ret = gulp.src([
-                'typings/**/*.d.ts',
-                'assets/ts/**/*.ts',
-                'assets/ts/**/*.tsx'
-            ])
-            .pipe(tsConfig());
+    var ret = bundle(isDist);
     if (isDist) {
         ret = ret.pipe(uglify());
     }

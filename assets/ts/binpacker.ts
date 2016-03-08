@@ -1,9 +1,9 @@
 
-// "use strict";
+"use strict";
 
-// module HowardUtility.BinPacker {
+import Hector from './hector';
 
-class Rectangle {
+export class Rectangle {
 	position : Hector = new Hector();
 	size : Hector = new Hector();
 	
@@ -14,7 +14,7 @@ class Rectangle {
 		return `Rectangle: ${this.position.toString()}, ${this.size.toString()}`; }
 }
 
-interface RectangleBinPackerI {
+export interface RectangleBinPackerI {
 	
 	init(size : Hector);
 	insertSingle(size : Hector) : Rectangle;
@@ -41,7 +41,7 @@ class ResultSkylineFindPosition {
 	index : number; 
 }
 
-class RectangleBinPackerSkyline implements RectangleBinPackerI {
+export class RectangleBinPackerSkyline implements RectangleBinPackerI {
 	
 	constructor(public size : Hector) {
 		this.init(size); }
@@ -157,5 +157,3 @@ class RectangleBinPackerSkyline implements RectangleBinPackerI {
 	}
 	
 }
-
-// }

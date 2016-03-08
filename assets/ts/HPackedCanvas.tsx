@@ -1,8 +1,14 @@
 
 "use strict";
 
-module HowardUtility.BinPacker {
-    
+import * as React from 'react';
+
+import { Rectangle } from './binpacker';
+import Hector from './hector';
+import { HPackerImageData } from './binpacker-uidata';
+
+import Utility from './binpacker-util';
+
 interface HPackedImageProps {
 	data : HPackerImageData;
 }
@@ -26,21 +32,21 @@ interface HPackedCanvasProps extends React.HTMLProps<any> {
 //   do not put code about packing (or anything else) inside!
 export class HPackedCanvas extends React.Component<HPackedCanvasProps, any> {
 	componentDidUpdate () {
-		canvasStoreAndClearCall(this.refs['canvas'] as HTMLCanvasElement,
+		Utility.canvasStoreAndClearCall(this.refs['canvas'] as HTMLCanvasElement,
 			(ctx) => {
 				React.Children.forEach(this.props.children,
 					(child) => {
-						canvasContextStoreCall(ctx, (ctx) => {
+						Utility.canvasContextStoreCall(ctx, (ctx) => {
 							var c: HPackedImage = (child as any);
 							var rect : Rectangle = c.props.data.packedrect;
 							if (c.props.data.flipped) {
 								var pi = c.props.data.image;
-								canvasDrawImageRotated(ctx, pi.cache.element,
+								Utility.canvasDrawImageRotated(ctx, pi.cache.element,
 									pi.content_origin.x, pi.content_origin.y,
 									pi.content_size.x, pi.content_size.y,
 									rect.position.x + (pi.content_size.y - pi.content_size.x) / 2,
 									rect.position.y + (pi.content_size.x - pi.content_size.y) / 2,
-									pi.content_size.x, pi.content_size.y, mToRad(90));
+									pi.content_size.x, pi.content_size.y, Utility.mToRad(90));
 							} else { c.props.data.image.renderOnContext(ctx, rect.position); }
                             if (this.props.showBorder) {
                                 ctx.strokeRect(rect.position.x, rect.position.y,
@@ -62,6 +68,4 @@ export class HPackedCanvas extends React.Component<HPackedCanvasProps, any> {
                 height={this.props.canvasSize.y} />
 		);
 	}
-}
-    
 }

@@ -1,5 +1,7 @@
 
-class PackerImage {
+import Hector from './hector';
+
+export class PackerImage {
 	
 	constructor(public cache : CachedImageData) { }
 	
@@ -17,7 +19,7 @@ class PackerImage {
 
 }
 
-class PackerImageStripped extends PackerImage {
+export class PackerImageStripped extends PackerImage {
 	public content_size : Hector;
 	public content_origin : Hector;
 	
@@ -39,7 +41,7 @@ class PackerImageStripped extends PackerImage {
 	}
 }
 
-class CachedImageData {
+export class CachedImageData {
 	element : HTMLImageElement;
 	data : ImageData;
 	
@@ -82,7 +84,7 @@ function createElementFromImageData(data : ImageData) : HTMLImageElement {
 }
 
 // stackoverflow.com/questions/12175991/crop-image-white-space-automatically-using-jquery
-function cropImage(cache : CachedImageData, callback : (image : PackerImageStripped) => any) {
+export function cropImage(cache : CachedImageData, callback : (image : PackerImageStripped) => any) {
 	
 	var data = cache.data;
 	function scanX(left : boolean) : number {

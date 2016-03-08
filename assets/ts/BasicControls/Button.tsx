@@ -1,14 +1,12 @@
 
-"use strict";
-
-module HowardUtility.BasicControls {
+import * as React from 'react';
     
 interface ButtonProps extends React.HTMLProps<any> {
     className?: string;
     onToolbar?: boolean;
 }
 
-export class Button extends React.Component<ButtonProps, any> {
+export default class Button extends React.Component<ButtonProps, any> {
     render () {
         var className = 'rbtn';
         if (this.props.onToolbar) {
@@ -17,6 +15,4 @@ export class Button extends React.Component<ButtonProps, any> {
             className += ' ' + this.props.className; }
         return (<button className={className} { ... this.props }>{this.props.children}</button>);
     }
-}
-    
 }

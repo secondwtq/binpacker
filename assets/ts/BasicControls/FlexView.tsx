@@ -1,7 +1,7 @@
 
 "use strict";
 
-module HowardUtility.BasicControls {
+import * as React from 'react';
 
 interface FlexViewProps extends React.HTMLProps<any> {
     row?: boolean;
@@ -18,7 +18,7 @@ interface FlexViewProps extends React.HTMLProps<any> {
     alignItems?: string;
 }
 
-export class FlexView extends React.Component<FlexViewProps, any> {
+export default class FlexView extends React.Component<FlexViewProps, any> {
     static defaultProps = {
         'alignItems': 'stretch'
     };
@@ -60,6 +60,4 @@ export class FlexView extends React.Component<FlexViewProps, any> {
 
 		return (<div { ... this.props } style={style}>{this.props.children}</div>);
 	}
-}
-
 }

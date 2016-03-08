@@ -1,35 +1,10 @@
 {
 	"compilerOptions": {
 		"target": "es5",
-		"outDir": "assets/js",
 		"emitBOM": false,
 		"charset": "UTF-8",
-		"jsx": "react"
-	},
-    "filesGlob": [
-        "typings/**/**.d.ts"
-    ],
-	"files": [
-        "typings/react/react-global.d.ts",
-		"typings/react/react.d.ts",
-		
-        "assets/ts/BasicControls/Button.tsx",
-        "assets/ts/BasicControls/Collapse.tsx",
-        "assets/ts/BasicControls/FlexView.tsx",
-        "assets/ts/BasicControls/FlexElement.tsx",
-        "assets/ts/BasicControls/Icon.tsx",
-        "assets/ts/BasicControls/EditableText.tsx",
-        "assets/ts/BasicControls/Modal.tsx",
-        
-        "assets/ts/HPackedCanvas.tsx",
-        "assets/ts/HModalImportImages.tsx",
-        "assets/ts/HModalSaveResult.tsx",
-        "assets/ts/HPreview.tsx",
-        
-		"assets/ts/binpacker-util.ts",
-		"assets/ts/binpacker-comp.tsx",
-		"assets/ts/binpacker-index.ts",
-		"assets/ts/hector.ts",
-		"assets/ts/binpacker.ts"
-	]
+		"jsx": "react",
+        "module": "commonjs",
+        "outDir": "."
+	}
 }

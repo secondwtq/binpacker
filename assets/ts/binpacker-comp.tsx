@@ -1,27 +1,25 @@
-/// <reference path="../../typings/lodash/lodash.d.ts" />
-"use strict";
 
-module HowardUtility.BinPacker {
+import Button from './BasicControls/Button';
+import Collapse from './BasicControls/Collapse';
+import FlexView from './BasicControls/FlexView';
+import FlexElement from './BasicControls/FlexElement';
+import Icon from './BasicControls/Icon';
+import EditableText from './BasicControls/EditableText';
 
-import Collapse = BasicControls.Collapse;
-import FlexView = BasicControls.FlexView;
-import Button = BasicControls.Button;
-import Icon = BasicControls.Icon;
-import FlexElement = BasicControls.FlexElement;
-import EditableText = BasicControls.EditableText;
+import HModalImportImages from './HModalImportImages';
 
-export class HPackerFolder {
-    constructor(public name: string) { }
-    images: HPackerImageData[] = [ ];
-    get length () { return this.images.length; }
-}
+import Hector from './hector';
+import { Rectangle, RectangleBinPackerI, RectangleBinPackerSkyline } from './binpacker';
 
-export class HPackerImageData {
-	constructor(public image : PackerImageStripped,
-		public name : string) { }
-	packedrect : Rectangle;
-	flipped : boolean = false;
-}
+import HModalSaveResult from './HModalSaveResult';
+import { HPackedCanvas, HPackedImage } from './HPackedCanvas';
+
+import { CachedImageData, cropImage } from './binpacker-index';
+import { HPackerFolder, HPackerImageData } from './binpacker-uidata';
+
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
+import ReactAddonUpdate = require('react-addons-update');
 
 type HImageListItem = HImagesListFolderItem | HImagesListImageItem;
 
@@ -283,7 +281,7 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
                     }
                 });
             };
-            image.src = e.target.result;
+            image.src = (e.target as any).result;
         };
         reader.readAsDataURL(file);
     }
@@ -309,7 +307,7 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
     onToolbarCreateNewFolder() {
         var folderName = (this.state.images.length + 1).toString();
         var newFolder = new HPackerFolder(folderName);
-        var newState = React.addons.update(this.state, { images: { $push: [ newFolder ] } });
+        var newState = ReactAddonUpdate(this.state, { images: { $push: [ newFolder ] } });
         this.setState(newState);
     }
     
@@ -407,5 +405,3 @@ class HPackerApp extends React.Component<any, HPackerAppState> {
 
 ReactDOM.render(<HPackerApp />,
     document.getElementById('rct-plchder'));
-
-}
