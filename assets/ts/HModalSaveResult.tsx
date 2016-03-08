@@ -27,7 +27,7 @@ export class HModalSaveResult extends React.Component<HModalSaveResultProps, any
         (this.refs['dialog'] as ModalDialog).close();
     }
     
-    saveImage(e: MouseEvent) {
+    onClickSaveImage(e: MouseEvent) {
         var imageData = (this.refs['canvas'] as HPackedCanvas).toDataURL('image/png');
         (this.refs['linkSaveImage'] as HTMLLinkElement).href = imageData;
     }
@@ -46,7 +46,7 @@ export class HModalSaveResult extends React.Component<HModalSaveResultProps, any
                         </HPackedCanvas>
                     </div>
                     <hr />
-                    <a ref="linkSaveImage" href="#" onClick={this.saveImage.bind(this)} download="sprite.png">
+                    <a ref="linkSaveImage" href="#" onClick={this.onClickSaveImage.bind(this)} download="sprite.png">
                         <Button>Save Image to ...</Button>
                     </a>
                     <Button>Save Definition to ...</Button>

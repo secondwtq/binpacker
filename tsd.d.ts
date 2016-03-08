@@ -10,3 +10,4 @@
 /// <reference path="typings/react/react-global.d.ts" />
 /// <reference path="typings/react/react.d.ts" />
 /// <reference path="typings/lodash/lodash.d.ts" />
+/// <reference path="typings/es6-promise/es6-promise.d.ts" />

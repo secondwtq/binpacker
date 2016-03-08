@@ -40,6 +40,9 @@
     },
     "lodash/lodash.d.ts": {
       "commit": "1ff1390269e87394e14abae43ecc422c9e2b2349"
+    },
+    "es6-promise/es6-promise.d.ts": {
+      "commit": "7577a2f4c134790891c52affdacdae99d802571b"
     }
   }
 }
